@@ -1,0 +1,24 @@
+CREATE PROCEDURE QA_COMPARE_COLUMNS
+(
+    @TableName NVARCHAR(255)
+)
+AS
+BEGIN
+    DECLARE @sql NVARCHAR(MAX);
+    SET @sql = '
+        SELECT
+            CASE
+                WHEN (
+                    SELECT STRING_AGG(COLUMN_NAME, '','') WITHIN GROUP (ORDER BY ORDINAL_POSITION)
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = ''' + QUOTENAME(@TableName) + '''
+                    AND ORDINAL_POSITION BETWEEN 1 AND 30
+                ) = ''ID,SITE,ZIP,DATE,IMAGELINK,PRICE,PRICE_MULT,EPRICE,EINDICATOR,ALTPRICE,ALTPRICEMULT,EALTPRICE,ALTINDICATOR,PACK,UNIT,UOM,SIZE,PRODUCT_ID,UPC,ASIN,CATEGORY,DESCRIPTION,NOTE,RATING,VALID,PAGEIMAGE,AISLE,ORIG_UPC,JOB_NUMBER,SALE_ENDDATE''
+                THEN ''Column_Name_Correct''
+                ELSE ''Column_Name_Incorrect''
+            END AS ColumnSequenceMatch';
+    EXEC sp_executesql @sql;
+END;
+ 
+ 
+EXEC QA_COMPARE_COLUMNS 'Backup_MetroCa_09_22_2023'
